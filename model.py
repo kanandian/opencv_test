@@ -7,6 +7,7 @@ from pygame.locals import * # 引入pygame中所有的常量
 from pygame.sprite import Sprite
 from pygame.sprite import Group
 import math
+import cv2
 
 
 class Leaf(Sprite):
@@ -64,7 +65,62 @@ class Application:
         add_leaf_thread = mthread.AddLeafThread(self)
         add_leaf_thread.start()
 
+        self.init_camera()
         self.processing()
+
+    def init_camera(self):
+        self.vc = cv2.VideoCapture(0)  # 读入视频文件
+        self.vc.set(3, constant.camera_width)  # 设置分辨率
+        self.vc.set(4, constant.camera_height)
+
+        rval, firstFrame = self.vc.read()
+        # firstFrame = cv2.resize(firstFrame, (640, 360), interpolation=cv2.INTER_CUBIC)
+        gray_firstFrame = cv2.cvtColor(firstFrame, cv2.COLOR_BGR2GRAY)  # 灰度化
+        firstFrame = cv2.GaussianBlur(gray_firstFrame, (21, 21), 0)  # 高斯模糊，用于去噪
+        self.prveFrame = firstFrame.copy()
+        print(firstFrame.shape)
+
+    def capture_and_handle_frame(self):
+        (ret, frame) = self.vc.read()
+
+        # 如果没有获取到数据，则结束循环
+        if not ret:
+            return
+        # 对获取到的数据进行预处理
+        # frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_CUBIC)
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_frame = cv2.GaussianBlur(gray_frame, (3, 3), 0)
+        # cv2.imshow("current_frame", gray_frame)
+        # cv2.imshow("prveFrame", prveFrame)
+        # 计算当前帧与上一帧的差别
+        frameDiff = cv2.absdiff(self.prveFrame, gray_frame)
+        cv2.imshow("frameDiff", frameDiff)
+        self.prveFrame = gray_frame.copy()
+        # 忽略较小的差别
+        retVal, thresh = cv2.threshold(frameDiff, 100, 255, cv2.THRESH_BINARY)
+        # 对阈值图像进行填充补洞
+        thresh = cv2.dilate(thresh, None, iterations=2)
+        contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        text = "Unoccupied"
+        # 遍历轮廓
+        for contour in contours:
+            # if contour is too small, just ignore it
+            if cv2.contourArea(contour) < 50:  # 面积阈值
+                continue
+            # 计算最小外接矩形（非旋转）
+            (x, y, w, h) = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            centerx = x + w/2
+            centery = y + h/2
+            centerx *= constant.screen_width/constant.camera_width
+            centery *= constant.screen_height/constant.camera_height
+            self.sweep_at(centerx, centery)
+            text = "Occupied!"
+        # cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        # cv2.putText(frame, "F{}".format(frameCount), (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.imshow('frame_with_result', frame)
+        # cv2.imshow('thresh', thresh)
+        # cv2.imshow('frameDiff', frameDiff)
 
     def processing(self):
         # move_thread = mthread.MoveLeavesThread(self.leaf_list)
@@ -74,6 +130,7 @@ class Application:
         while self.running:
             self.handle_event()
             # self.add_leaf()
+            self.capture_and_handle_frame()
             self.update_leaves()
             self.update_screen()
 
@@ -100,9 +157,13 @@ class Application:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+                self.vc.release()
+                cv2.destroyAllWindows()
             elif event.type == KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+                    self.vc.release()
+                    cv2.destroyAllWindows()
             elif event.type == pygame.MOUSEMOTION:
                 self.sweep_at(event.pos[0], event.pos[1])
 

@@ -7,3 +7,5 @@ max_distance = 100
 move_speed = 2
 add_leaf_speed_factor = 0.2
 initial_leaves_num = 6
+camera_width = 1080
+camera_height = 720
