@@ -121,8 +121,29 @@ def open_and_close():
     utils.cv_show(close)
 
 
+#梯度运算(梯度=膨胀-腐蚀)
+def gradient_operation():
+    img = cv2.imread('images/circle.jpeg')
+    kernel = np.ones((30, 30), np.uint8)
+    grandient = cv2.morphologyEx(img, cv2.MORPH_GRADIENT, kernel)
+    utils.cv_show(grandient)
+
+# 礼帽与黑帽
+# 礼帽=原始输入-开运算结果
+# 黑帽=闭运算-原始输入
+def hothat_and_blackhat():
+    img = cv2.imread('images/circle.jpeg')
+    kernel = np.ones((10, 10), np.uint8)
+    #礼帽
+    tophat = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, kernel)
+    blackhat = cv2.morphologyEx(img, cv2.MORPH_BLACKHAT, kernel)
+
+    res = np.hstack((tophat, blackhat))
+
+    utils.cv_show(res)
+
 def main():
-    open_and_close()
+    hothat_and_blackhat()
 
 
 if __name__ == '__main__':

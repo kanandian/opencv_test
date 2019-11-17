@@ -1,4 +1,5 @@
 import cv2
+import constant
 
 def cv_show2(name, image):
     cv2.imshow(name, image)
@@ -14,3 +15,8 @@ def cv_show(*args):
         cv_show1(args[0])
     elif len(args) == 2:
         cv_show2(args[0]. args[1])
+
+def is_out_of_range(leaf):
+    if (leaf.position_y+constant.leaf_height<0 or leaf.position_y>constant.screen_height or leaf.position_x+constant.leaf_width<0 or leaf.position_x>constant.screen_width):
+        return True
+    return False
