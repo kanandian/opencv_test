@@ -31,7 +31,7 @@ while True:
 
 
     # 忽略较小的差别
-    retVal, thresh = cv2.threshold(frameDiff, 130, 255, cv2.THRESH_BINARY)
+    retVal, thresh = cv2.threshold(frameDiff, 100, 255, cv2.THRESH_BINARY)
 
 
     # 对阈值图像进行填充补洞

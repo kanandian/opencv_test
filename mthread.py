@@ -1,6 +1,7 @@
 import threading
 import utils
 import time
+import constant
 
 
 class MoveLeavesThread(threading.Thread):
@@ -39,4 +40,14 @@ class UpdateUIThread(threading.Thread):
             self.application.update_ui()
             time.sleep(0.001)
         # pass
+
+class AddLeafThread(threading.Thread):
+    def __init__(self, application):
+        threading.Thread.__init__(self)
+        self.application = application
+
+    def run(self):
+        while self.application.running:
+            self.application.add_leaf()
+            time.sleep(constant.add_leaf_speed_factor)
 

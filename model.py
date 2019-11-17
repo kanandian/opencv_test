@@ -1,14 +1,12 @@
 import constant
 import random
 import pygame
-import _thread
-import time
 import mthread
 import threading
-import utils
 from pygame.locals import * # 引入pygame中所有的常量
 from pygame.sprite import Sprite
 from pygame.sprite import Group
+import math
 
 
 class Leaf(Sprite):
@@ -17,11 +15,11 @@ class Leaf(Sprite):
         self.screen = screen
         self.image = pygame.image.load('images/yezi.png')
         self.rect = self.image.get_rect()
-        self.rect.x = random.randint(0, constant.screen_width)
-        self.rect.y = random.randint(0, constant.screen_height)
+        self.position_x = random.randint(0, constant.screen_width)
+        self.position_y = -200
         self.dirction_x = -1
         self.dirction_y = -1
-        self.speed = 1
+        self.speed = constant.move_speed
 
     def check_edges(self):
         screen_rect = self.screen.get_rect()
@@ -30,13 +28,16 @@ class Leaf(Sprite):
         return False
 
     def update(self):
+        print(str(self.dirction_x)+'   '+str(self.dirction_y))
         if self.dirction_x == -1 and self.dirction_y == -1:
-            self.rect.y += self.speed
+            self.position_y += self.speed
         else:
             if self.dirction_x != -1:
-                self.rect.x += self.dirction_x
+                self.position_x += self.dirction_x
             if self.dirction_y != -1:
-                self.rect.y += self.dirction_y
+                self.position_y += self.dirction_y
+        self.rect.x = int(self.position_x)
+        self.rect.y = int(self.position_y)
 
     def blitme(self):
         self.screen.blit(self.image, self.rect)
@@ -58,8 +59,11 @@ class Application:
         # pygame.draw.line(self.screen, color, (100, 100), (500, 400), line_width)
         # pygame.display.update()
 
-        for i in range(0,50):
+        for i in range(0,constant.initial_leaves_num):
             self.add_leaf()
+
+        add_leaf_thread = mthread.AddLeafThread(self)
+        add_leaf_thread.start()
 
         self.processing()
 
@@ -70,6 +74,7 @@ class Application:
         # update_thread.start()
         while self.running:
             self.handle_event()
+            # self.add_leaf()
             self.update_leaves()
             self.update_screen()
 
@@ -86,7 +91,7 @@ class Application:
         self.screen.fill(constant.background_color)
         self.leaves.draw(self.screen)
         pygame.display.flip()
-        time.sleep(0.001)
+        # time.sleep(0.001)
 
     def add_leaf(self):
         leaf = Leaf(self)
@@ -94,11 +99,45 @@ class Application:
 
     def handle_event(self):
         for event in pygame.event.get():
-            if event.type == QUIT:
+            if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    self.running == False
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+            elif event.type == pygame.MOUSEMOTION:
+                self.sweep_at(event.pos[0], event.pos[1])
+
+    def sweep_at(self, x, y):
+        fa = False
+        fb = False
+        for leaf in self.leaves.sprites():
+            dist_x = leaf.rect.centerx-x
+            dist_y = leaf.rect.centery-y
+            distance = math.sqrt(math.pow(dist_x, 2) + math.pow(dist_y, 2))
+            if distance < constant.max_distance:
+                if dist_x < 0:
+                    fa = True
+                if dist_y < 0:
+                    fb = True
+                if dist_x == 0:
+                    leaf.dirction_x = -1
+                    leaf.dirction_y = constant.move_speed
+                    if fb:
+                        leaf.dirction_y *= -1
+                else:
+                    b = math.fabs(float(dist_y)/float(dist_x))
+                    a = leaf.speed/math.sqrt(1+b*b)
+                    b *= a
+                    if fa:
+                        a *= -1
+                    if fb:
+                        b *= -1
+                    leaf.dirction_x = a
+                    leaf.dirction_y = b
+
+
+
+
 
     # def move_leaves(self):
     #     remove_list = []
