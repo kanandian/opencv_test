@@ -28,7 +28,6 @@ class Leaf(Sprite):
         return False
 
     def update(self):
-        print(str(self.dirction_x)+'   '+str(self.dirction_y))
         if self.dirction_x == -1 and self.dirction_y == -1:
             self.position_y += self.speed
         else:
