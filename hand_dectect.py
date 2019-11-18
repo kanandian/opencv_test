@@ -28,58 +28,167 @@
 # cv2.destroyAllWindows()
 
 
-import cv2
-import numpy as np
-
-def main():
-    cap = cv2.VideoCapture(0)
-    while(cap.isOpened()):
-        ret,img = cap.read()
-        skinMask = HSVBin(img)
-        contours = getContours(skinMask)
-        cv2.drawContours(img,contours,-1,(0,255,0),2)
-        cv2.imshow('capture',img)
-        k = cv2.waitKey(10)
-        if k == 27:
-            break
-
-def getContours(img):
-    kernel = np.ones((5,5),np.uint8)
-    closed = cv2.morphologyEx(img,cv2.MORPH_OPEN,kernel)
-    closed = cv2.morphologyEx(closed,cv2.MORPH_CLOSE,kernel)
-    contours,h = cv2.findContours(closed,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    vaildContours = []
-    for cont in contours:
-        if cv2.contourArea(cont)>9000:
-            #x,y,w,h = cv2.boundingRect(cont)
-            #if h/w >0.75:
-            #filter face failed
-            vaildContours.append(cv2.convexHull(cont))
-            #rect = cv2.minAreaRect(cont)
-            #box = cv2.cv.BoxPoint(rect)
-            #vaildContours.append(np.int0(box))
-    return  vaildContours
-
-def HSVBin(img):
-    hsv = cv2.cvtColor(img,cv2.COLOR_RGB2HSV)
-
-    lower_skin = np.array([100,50,0])
-    upper_skin = np.array([125,255,255])
-
-    mask = cv2.inRange(hsv,lower_skin,upper_skin)
-    #res = cv2.bitwise_and(img,img,mask=mask)
-    return mask
-
-if __name__ =='__main__':
-    main()
-
-
-# import sys
-#
 # import cv2
+# import numpy as np
 #
-# hand_model = 'hand.xml'
-# out_file = "output.avi"
+# def main():
+#     cap = cv2.VideoCapture(0)
+#     while(cap.isOpened()):
+#         ret,img = cap.read()
+#         skinMask = HSVBin(img)
+#         contours = getContours(skinMask)
+#         cv2.drawContours(img,contours,-1,(0,255,0),2)
+#         cv2.imshow('capture',img)
+#         k = cv2.waitKey(10)
+#         if k == 27:
+#             break
+#
+# def getContours(img):
+#     kernel = np.ones((5,5),np.uint8)
+#     closed = cv2.morphologyEx(img,cv2.MORPH_OPEN,kernel)
+#     closed = cv2.morphologyEx(closed,cv2.MORPH_CLOSE,kernel)
+#     contours,h = cv2.findContours(closed,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+#     vaildContours = []
+#     for cont in contours:
+#         if cv2.contourArea(cont)>9000:
+#             #x,y,w,h = cv2.boundingRect(cont)
+#             #if h/w >0.75:
+#             #filter face failed
+#             vaildContours.append(cv2.convexHull(cont))
+#             #rect = cv2.minAreaRect(cont)
+#             #box = cv2.cv.BoxPoint(rect)
+#             #vaildContours.append(np.int0(box))
+#     return  vaildContours
+#
+# def HSVBin(img):
+#     hsv = cv2.cvtColor(img,cv2.COLOR_RGB2HSV)
+#
+#     lower_skin = np.array([100,50,0])
+#     upper_skin = np.array([125,255,255])
+#
+#     mask = cv2.inRange(hsv,lower_skin,upper_skin)
+#     #res = cv2.bitwise_and(img,img,mask=mask)
+#     return mask
+#
+# if __name__ =='__main__':
+#     main()
+
+
+
+#使用hand.xml检测
+# import cv2
+# import time
+#
+# if __name__ == '__main__':
+#
+#     capture = cv2.VideoCapture(0)
+#     hand_cascade = cv2.CascadeClassifier(r'./resources/hand.xml')
+#
+#     num = 0;
+#     while True:
+#         success, img = capture.read()
+#         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#         # 探测图片中的人脸
+#         hands = hand_cascade.detectMultiScale(
+#             gray,
+#             scaleFactor=1.15,
+#             minNeighbors=5,
+#             minSize=(5, 5)
+#         )
+#         # print("发现{0}个人脸".format(len(faces)))
+#         for (x, y, w, h) in hands:
+#             # cv2.rectangle(img,(x,y),(x+w,y+w),(0,255,0),2)
+#             cv2.circle(img, ((x + x + w) // 2, (y + y + h) // 2), w // 2, (0, 255, 0), 2)
+#
+#         cv2.imshow("camera", img)
+#
+#         # 按键处理，注意，焦点应当在摄像头窗口，不是在终端命令行窗口
+#         key = cv2.waitKey(10)
+#
+#         if key == 27:
+#             # esc键退出
+#             print("esc break...")
+#             break
+#         if key == ord(' '):
+#             # 保存一张图像
+#             num = num + 1
+#             filename = "frames_%s.jpg" % num
+#             cv2.imwrite(filename, img)
+#
+#     capture.release()
+
+
+# from imutils.object_detection import non_max_suppression
+
+
+# import cv2
+# import numpy as np
+#
+# hand_model = './resources/hand.xml'
+#
+#
+# #  Felzenszwalb et al.
+# def non_max_suppression_slow(boxes, overlapThresh):
+#     # if there are no boxes, return an empty list
+#     if len(boxes) == 0:
+#         return []
+#
+#     # initialize the list of picked indexes
+#     pick = []
+#
+#     # grab the coordinates of the bounding boxes
+#     x1 = boxes[:, 0]
+#     y1 = boxes[:, 1]
+#     x2 = boxes[:, 2]
+#     y2 = boxes[:, 3]
+#
+#     # compute the area of the bounding boxes and sort the bounding
+#     # boxes by the bottom-right y-coordinate of the bounding box
+#     area = (x2 - x1 + 1) * (y2 - y1 + 1)
+#     idxs = np.argsort(y2)
+#     # keep looping while some indexes still remain in the indexes
+#     # list
+#     while len(idxs) > 0:
+#         # grab the last index in the indexes list, add the index
+#         # value to the list of picked indexes, then initialize
+#         # the suppression list (i.e. indexes that will be deleted)
+#         # using the last index
+#         last = len(idxs) - 1
+#         i = idxs[last]
+#         pick.append(i)
+#         suppress = [last]
+#         # loop over all indexes in the indexes list
+#         for pos in range(0, last):
+#             # grab the current index
+#             j = idxs[pos]
+#
+#             # find the largest (x, y) coordinates for the start of
+#             # the bounding box and the smallest (x, y) coordinates
+#             # for the end of the bounding box
+#             xx1 = max(x1[i], x1[j])
+#             yy1 = max(y1[i], y1[j])
+#             xx2 = min(x2[i], x2[j])
+#             yy2 = min(y2[i], y2[j])
+#
+#             # compute the width and height of the bounding box
+#             w = max(0, xx2 - xx1 + 1)
+#             h = max(0, yy2 - yy1 + 1)
+#
+#             # compute the ratio of overlap between the computed
+#             # bounding box and the bounding box in the area list
+#             overlap = float(w * h) / area[j]
+#
+#             # if there is sufficient overlap, suppress the
+#             # current bounding box
+#             if overlap > overlapThresh:
+#                 suppress.append(pos)
+#
+#         # delete all indexes from the index list that are in the
+#         # suppression list
+#         idxs = np.delete(idxs, suppress)
+#
+#     # return only the bounding boxes that were picked
+#     return boxes[pick]
 #
 #
 # def faceDetect(img, handCascade):
@@ -126,6 +235,37 @@ if __name__ =='__main__':
 #     # video.release()
 #     cap.release()
 #     cv2.destroyAllWindows()
-#
-#
+
+
 # main()
+
+import cv2
+
+class HandDectectByHandXML:
+    def __init__(self):
+        self.hand_cascade = cv2.CascadeClassifier(r'./resources/hand.xml')
+
+    def get_hand_positions(self, frame, mode):
+        if mode == 1:
+            return self.get_hand_positions_by_mode1(frame)
+        elif mode == 2:
+            return self.get_hand_positions_by_mode2(frame)
+
+    def get_hand_positions_by_mode1(self, frame):
+        res = []
+        # 探测图片中的人脸
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        hands = self.hand_cascade.detectMultiScale(
+            gray_frame,
+            scaleFactor=1.15,
+            minNeighbors=5,
+            minSize=(5, 5)
+        )
+        # print("发现{0}个人脸".format(len(faces)))
+        for (x, y, w, h) in hands:
+            res.append((x, y, w, h))
+
+        return res
+
+    def get_hand_positions_by_mode2(self, frame):
+        return 2

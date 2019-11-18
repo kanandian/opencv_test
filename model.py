@@ -8,6 +8,7 @@ from pygame.sprite import Sprite
 from pygame.sprite import Group
 import math
 import cv2
+import hand_dectect
 
 
 class Leaf(Sprite):
@@ -53,6 +54,7 @@ class Application:
         self.leaves = Group()
         self.lock = threading.Lock()
         self.running = True
+        self.hand_dectect = hand_dectect.HandDectectByHandXML()
 
         # line_width = 8
         # color = (255, 255, 0)
@@ -79,6 +81,21 @@ class Application:
         self.prveFrame = cv2.GaussianBlur(gray_firstFrame, (21, 21), 0)  # 高斯模糊，用于去噪
         self.prveFrame = self.prveFrame.copy()
         # print(firstFrame.shape)
+
+    def handle_hand_motion_by_mode(self):
+        (ret, frame) = self.vc.read()
+        positions = self.hand_dectect.get_hand_positions(frame, constant.dectect_mod)
+        for (x, y, w, h) in positions:
+            centerx = x + w / 2
+            centery = y + h / 2
+            centerx *= constant.screen_width / constant.camera_width
+            centery *= constant.screen_height / constant.camera_height
+            centerx = constant.screen_width - centerx
+            cv2.circle(frame, ((x + x + w) // 2, (y + y + h) // 2), w // 2, (0, 255, 0), 2)
+            self.sweep_at(centerx, centery)
+
+        frame = cv2.flip(frame, 1, dst=None)
+        cv2.imshow('frame_with_result', frame)
 
     def capture_and_handle_frame(self):
         (ret, frame) = self.vc.read()
@@ -132,7 +149,8 @@ class Application:
         while self.running:
             self.handle_event()
             # self.add_leaf()
-            self.capture_and_handle_frame()
+            self.handle_hand_motion_by_mode()
+            # self.capture_and_handle_frame()
             self.update_leaves()
             self.update_screen()
 
@@ -166,8 +184,8 @@ class Application:
                     self.running = False
                     self.vc.release()
                     cv2.destroyAllWindows()
-            elif event.type == pygame.MOUSEMOTION:
-                self.sweep_at(event.pos[0], event.pos[1])
+            # elif event.type == pygame.MOUSEMOTION:
+            #     self.sweep_at(event.pos[0], event.pos[1])
 
     def sweep_at(self, x, y):
         fa = False
@@ -177,6 +195,7 @@ class Application:
             dist_y = leaf.rect.centery-y
             distance = math.sqrt(math.pow(dist_x, 2) + math.pow(dist_y, 2))
             if distance < constant.max_distance:
+                leaf.speed == constant.sweep_speed
                 if dist_x < 0:
                     fa = True
                 if dist_y < 0:
@@ -196,9 +215,6 @@ class Application:
                         b *= -1
                     leaf.dirction_x = a
                     leaf.dirction_y = b
-
-
-
 
 
     # def move_leaves(self):
