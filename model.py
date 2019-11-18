@@ -105,7 +105,7 @@ class Application:
         # 遍历轮廓
         for contour in contours:
             # if contour is too small, just ignore it
-            if cv2.contourArea(contour) < 50:  # 面积阈值
+            if cv2.contourArea(contour) < 150:  # 面积阈值
                 continue
             # 计算最小外接矩形（非旋转）
             (x, y, w, h) = cv2.boundingRect(contour)
@@ -114,10 +114,12 @@ class Application:
             centery = y + h/2
             centerx *= constant.screen_width/constant.camera_width
             centery *= constant.screen_height/constant.camera_height
+            centerx = constant.screen_width - centerx
             self.sweep_at(centerx, centery)
             text = "Occupied!"
         # cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         # cv2.putText(frame, "F{}".format(frameCount), (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        frame = cv2.flip(frame, 1, dst=None)
         cv2.imshow('frame_with_result', frame)
         # cv2.imshow('thresh', thresh)
         # cv2.imshow('frameDiff', frameDiff)
