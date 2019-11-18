@@ -76,9 +76,9 @@ class Application:
         rval, firstFrame = self.vc.read()
         # firstFrame = cv2.resize(firstFrame, (640, 360), interpolation=cv2.INTER_CUBIC)
         gray_firstFrame = cv2.cvtColor(firstFrame, cv2.COLOR_BGR2GRAY)  # 灰度化
-        firstFrame = cv2.GaussianBlur(gray_firstFrame, (21, 21), 0)  # 高斯模糊，用于去噪
-        self.prveFrame = firstFrame.copy()
-        print(firstFrame.shape)
+        self.prveFrame = cv2.GaussianBlur(gray_firstFrame, (21, 21), 0)  # 高斯模糊，用于去噪
+        self.prveFrame = self.prveFrame.copy()
+        # print(firstFrame.shape)
 
     def capture_and_handle_frame(self):
         (ret, frame) = self.vc.read()
@@ -105,7 +105,7 @@ class Application:
         # 遍历轮廓
         for contour in contours:
             # if contour is too small, just ignore it
-            if cv2.contourArea(contour) < 150:  # 面积阈值
+            if cv2.contourArea(contour) < 200:  # 面积阈值
                 continue
             # 计算最小外接矩形（非旋转）
             (x, y, w, h) = cv2.boundingRect(contour)
