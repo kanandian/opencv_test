@@ -17,15 +17,17 @@ class Leaf(Sprite):
         self.screen = screen
         self.image = pygame.image.load('images/yezi.png')
         self.rect = self.image.get_rect()
-        self.position_x = random.randint(0, constant.screen_width)
-        self.position_y = -200
+        self.position_x = float(random.randint(0, constant.screen_width))
+        self.position_y = float(-100)
         self.dirction_x = -1
         self.dirction_y = -1
+        self.rect.x = int(self.position_x)
+        self.rect.y = int(self.position_y)
         self.speed = constant.move_speed
 
     def check_edges(self):
         screen_rect = self.screen.get_rect()
-        if self.rect.right < screen_rect.left or self.rect.left > screen_rect.right or self.rect.bottom < screen_rect.top or self.rect.top < screen_rect.bottom:
+        if self.rect.right < screen_rect.left or self.rect.left > screen_rect.right or self.rect.bottom < screen_rect.top - 150 or self.rect.top > screen_rect.bottom:
             return True
         return False
 
@@ -42,6 +44,7 @@ class Leaf(Sprite):
 
     def blitme(self):
         self.screen.blit(self.image, self.rect)
+
 
 
 class Application:
@@ -152,6 +155,7 @@ class Application:
             self.handle_hand_motion_by_mode()
             # self.capture_and_handle_frame()
             self.update_leaves()
+            self.remove_invalid_leaves()
             self.update_screen()
 
     def update_leaves(self):
@@ -170,7 +174,7 @@ class Application:
         # time.sleep(0.001)
 
     def add_leaf(self):
-        leaf = Leaf(self)
+        leaf = Leaf(self.screen)
         self.leaves.add(leaf)
 
     def handle_event(self):
@@ -186,6 +190,11 @@ class Application:
                     cv2.destroyAllWindows()
             # elif event.type == pygame.MOUSEMOTION:
             #     self.sweep_at(event.pos[0], event.pos[1])
+
+    def remove_invalid_leaves(self):
+        for leaf in self.leaves.sprites():
+            if leaf.check_edges():
+                self.leaves.remove(leaf)
 
     def sweep_at(self, x, y):
         fa = False
