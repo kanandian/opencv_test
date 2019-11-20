@@ -5,7 +5,7 @@ import time
 from pygame.locals import * # 引入pygame中所有的常量
 
 
-application = model.Application()
+application = model.ApplicationByPygame()
 
 # # 定义Player对象 调用super赋予它属性和方法
 # # 我们画在屏幕上的surface 现在是player的一个属性

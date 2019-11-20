@@ -47,7 +47,7 @@ class Leaf(Sprite):
 
 
 
-class Application:
+class ApplicationByPyqt:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption('interation_projection')
